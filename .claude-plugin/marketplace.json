@@ -4,5 +4,15 @@
     "name": "BizAI",
     "email": "hi@leanbizai.com"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "reel-machine",
+      "source": "./plugins/reel-machine",
+      "version": "1.0.0",
+      "description": "סרטון מהטלפון הופך לריל עם כתוביות ממותגות ותמונת שער. node ו-ffmpeg בלבד.",
+      "author": {
+        "name": "BizAI"
+      }
+    }
+  ]
 }
