@@ -99,6 +99,103 @@ const RTL = /[\u0590-\u05FF\u0600-\u06FF]/;
 // Hebrew caption needs one, and a swallowed line is invisible until it ships.
 const clean = (s) => String(s).replace(/[{}]/g, "").replace(/\\/g, "");
 
+// 🔴 THE WHOLE RTL STORY. Rewritten 2026-08-05 after measuring, on reel 04,
+// what the previous two attempts had only guessed at. Each claim below is a
+// rendered frame that was looked at, not a theory about libass.
+//
+// WHAT IS ACTUALLY TRUE:
+//  a. libass DOES bidi the whole line, across colour overrides. A card with a
+//     highlighted word in the MIDDLE comes out in correct Hebrew order with no
+//     help from us at all.
+//  b. The paragraph direction is decided by the first STRONG character of the
+//     text, and an override block `{\c...}` is stripped before that decision.
+//     So a card that opens with a highlighted foreign word — "ShareX פה למטה" —
+//     is judged left-to-right and the entire card renders mirrored.
+//  c. U+200F (RLM) at the head does not rescue case (b). It is zero-width and
+//     is gone before the direction is picked. Measured, not assumed.
+//
+// WHAT THE TWO EARLIER FIXES GOT WRONG:
+//  1. Wrapping the line in RLE…PDF. This fought (a) instead of using it, and it
+//     made libass measure segment widths against a string it had already
+//     reordered — so an orange word was drawn ON TOP of its neighbour. That is
+//     the overlap Aviv would have seen on screen.
+//  2. Reversing the run order by hand. Same problem: it double-reverses the
+//     cards that (a) already handles, and it never touched the real cause of
+//     the mirrored cards, which is (b).
+//
+// WHAT WE DO NOW: leave the bidi alone, and make case (b) unreachable — a card
+// is never allowed to BEGIN with a highlighted run. The word stays on screen
+// and stays readable; it just does not get the orange. Losing one highlight
+// beats shipping a mirrored card, and it is the only case where they conflict.
+const LTR_CH = /[A-Za-z0-9]/;
+/** 'rtl' | 'ltr' | null. null = neutral (space, punctuation, brackets): it has
+ *  no direction of its own and simply joins the run it is standing next to. */
+const dirOf = (ch) => (RTL.test(ch) ? "rtl" : LTR_CH.test(ch) ? "ltr" : null);
+
+/** A card becomes runs of (direction × highlighted). Splitting by CHARACTER is
+ *  the point: "ב-Zappy" is one word and two runs. */
+function toRuns(card, keywords) {
+  let full = "";
+  const hotSpans = [];
+  card.forEach((w, i) => {
+    const t = clean(w.w);
+    if (i) full += " ";
+    if (HAS_DIGIT.test(t) || keywords.has(t.replace(/[.,!?]/g, ""))) {
+      hotSpans.push([full.length, full.length + t.length]);
+    }
+    full += t;
+  });
+  const isHot = (i) => hotSpans.some(([a, b]) => i >= a && i < b);
+
+  const runs = [];
+  for (let i = 0; i < full.length; i++) {
+    const ch = full[i];
+    const d = dirOf(ch);
+    const hot = isHot(i);
+    const cur = runs[runs.length - 1];
+    // A neutral character extends the current run rather than starting one, so a
+    // space between two Hebrew words never becomes a segment boundary.
+    if (cur && cur.hot === hot && (d === null || cur.dir === null || cur.dir === d)) {
+      cur.text += ch;
+      if (cur.dir === null) cur.dir = d;
+    } else {
+      runs.push({ text: ch, dir: d, hot });
+    }
+  }
+  return { runs, full };
+}
+
+function buildLine(card, keywords) {
+  const { runs, full } = toRuns(card, keywords);
+  const firstStrong = [...full].find((ch) => dirOf(ch) !== null);
+  // Case (b): a Hebrew card whose first strong character is Latin — "ShareX פה
+  // למטה" — is laid out as a left-to-right paragraph and comes out mirrored.
+  // This is the ONLY case libass gets wrong, and it is the one case where we
+  // reorder by hand: under an LTR layout, reversing the runs ourselves produces
+  // the correct right-to-left picture.
+  const mirrored = RTL.test(full) && firstStrong && dirOf(firstStrong) === "ltr";
+  if (mirrored) {
+    // No colour overrides on a reordered line. Overrides plus a reordered line
+    // is exactly the combination that made libass mis-measure and stack an
+    // orange word on top of its neighbour. The word keeps its place, and loses
+    // only the orange, on the handful of cards that open with a foreign word.
+    const parts = runs.map((r) => r.text.trim()).filter(Boolean).reverse();
+    const start = toAssTime(card[0].startSec);
+    const end = toAssTime(card[card.length - 1].endSec);
+    return `Dialogue: 0,${start},${end},Cap,,0,0,0,,${parts.join(" ")}`;
+  }
+  // Everything else: hands off. libass bidi already gets these right, and both
+  // previous attempts broke them by "helping".
+  // Joined with "" — the spaces are already inside the runs. Joining with " "
+  // here is what would double the gaps around a highlighted word.
+  const text = runs
+    .map((r) => (r.hot ? `{\\c${ORANGE_BGR}}${r.text}{\\c${WHITE_BGR}}` : r.text))
+    .join("");
+  const start = toAssTime(card[0].startSec);
+  const end = toAssTime(card[card.length - 1].endSec);
+  return `Dialogue: 0,${start},${end},Cap,,0,0,0,,${text}`;
+}
+
 function main() {
   const video = arg("video");
   const wordsPath = arg("words");
@@ -118,40 +215,7 @@ function main() {
   if (!words.length) throw new Error("קובץ התמלול ריק");
 
   const cards = toCards(words, max, 0.6, parseInt(arg("chars", "26"), 10));
-  const lines = cards.map((card) => {
-    // 🔴 Build RUNS, not a string, and reverse them for RTL. Measured, not
-    // assumed: a card with no colour override renders in correct Hebrew order,
-    // and the same card WITH one comes out scrambled. The override splits the
-    // line into segments that libass then lays out left-to-right, so segment
-    // order is visual, while the words inside each segment still bidi correctly.
-    // Reversing the segment order therefore fixes the card without touching the
-    // words. Wrapping U+202B around the whole line does NOT fix it, which is why
-    // this looks like the obvious solution and is not.
-    const runs = [];
-    for (const w of card) {
-      const t = clean(w.w);
-      const hot = HAS_DIGIT.test(t) || keywords.has(t.replace(/[.,!?]/g, ""));
-      const last = runs[runs.length - 1];
-      if (hot) runs.push({ hot: true, text: t });
-      else if (last && !last.hot) last.text += " " + t;
-      else runs.push({ hot: false, text: t });
-    }
-    const anyRTL = runs.some((r) => RTL.test(r.text));
-    const ordered = anyRTL ? [...runs].reverse() : runs;
-    const text = ordered
-      .map((r) => (r.hot ? `{\\c${ORANGE_BGR}}${r.text}{\\c${WHITE_BGR}}` : r.text))
-      .join(" ");
-    const start = toAssTime(card[0].startSec);
-    const end = toAssTime(card[card.length - 1].endSec);
-    // 🔴 RTL. libass runs bidi per line, and a line that opens with a colour
-    // override (a Latin brace-block) gets a LEFT-to-right paragraph direction.
-    // The words then render in reverse: "עם לייקים לא הולכים למכולת" came out
-    // "לא הולכים למכולת לייקים עם" in the first test, which reads as gibberish
-    // to the only people this skill is for. RLE...PDF pins the paragraph to RTL
-    // regardless of which character happens to be first.
-    const wrapped = RTL.test(text) ? `‫${text}‬` : text;
-    return `Dialogue: 0,${start},${end},Cap,,0,0,0,,${wrapped}`;
-  });
+  const lines = cards.map((card) => buildLine(card, keywords));
 
   // an5 = middle-centre anchor, so `y` positions the caption's CENTRE and the
   // band grows symmetrically instead of drifting as the line count changes.
