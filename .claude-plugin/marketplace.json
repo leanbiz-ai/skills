@@ -4,5 +4,14 @@
     "name": "BizAI",
     "email": "hi@leanbizai.com"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "tag-check",
+      "source": "./plugins/tag-check",
+      "version": "0.0.1",
+      "author": {
+        "name": "BizAI"
+      }
+    }
+  ]
 }
