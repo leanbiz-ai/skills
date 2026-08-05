@@ -40,10 +40,17 @@ function ffmpegExe() {
   throw new Error("לא נמצא ffmpeg. מק: brew install ffmpeg · חלונות: winget install ffmpeg");
 }
 
-/** Same segment-reversal as captions.mjs, and for the same measured reason: a
- *  colour override splits the line into runs that libass lays out left to right,
- *  so a Hebrew hook with a highlighted word comes out with its words in reverse.
- *  Reversing the run order fixes it; wrapping the line in bidi marks does not. */
+/** 🔴 CORRECTED 2026-08-05, together with captions.mjs and for the same reason.
+ *  This used to reverse the runs of EVERY Hebrew line. That is wrong: libass
+ *  bidis the line for us, across colour overrides, and gets it right — so the
+ *  blanket reversal was undoing correct output, and on top of a reordered line
+ *  libass mis-measures the segments and prints an orange word ON TOP of its
+ *  neighbour. Both were seen on rendered frames.
+ *  The one case libass really does get wrong is a Hebrew line whose first
+ *  STRONG character is Latin ("ShareX פה למטה"): the paragraph is judged
+ *  left-to-right and the line comes out mirrored. That case, and only that
+ *  case, we reorder by hand — and drop the overrides while we do, because
+ *  overrides plus a reordered line is what causes the overlap. */
 /** 🔴 We break the lines OURSELVES and join with \N. Letting libass wrap a
  *  reversed-run line reverses the LINE order too, so a two-line hook reads
  *  bottom-up: "עם לייקים לא הולכים למכולת" came out "לא הולכים / עם לייקים
@@ -70,7 +77,7 @@ function assLine(text, perLine = 0) {
   }
   if (row.length) rows.push(row);
 
-  const isRTL = RTL.test(text);
+  const LTR_CH = /[A-Za-z0-9]/;
   return rows
     .map((r) => {
       // merge neighbours of the same colour so we emit as few runs as possible
@@ -80,8 +87,13 @@ function assLine(text, perLine = 0) {
         if (last && last.hot === t.hot) last.text += " " + t.text;
         else runs.push({ ...t });
       }
-      const ordered = isRTL ? [...runs].reverse() : runs;
-      return ordered.map((x) => (x.hot ? `{\\c${ORANGE}}${x.text}{\\c${CREAM}}` : x.text)).join(" ");
+      const plain = runs.map((x) => x.text).join(" ");
+      const firstStrong = [...plain].find((ch) => RTL.test(ch) || LTR_CH.test(ch));
+      // Mirrored only when the line HAS Hebrew but OPENS in Latin.
+      if (RTL.test(plain) && firstStrong && LTR_CH.test(firstStrong)) {
+        return [...runs].reverse().map((x) => x.text).join(" ");
+      }
+      return runs.map((x) => (x.hot ? `{\\c${ORANGE}}${x.text}{\\c${CREAM}}` : x.text)).join(" ");
     })
     .join("\\N");
 }
