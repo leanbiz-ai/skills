@@ -4,19 +4,5 @@
     "name": "BizAI",
     "email": "hi@leanbizai.com"
   },
-  "plugins": [
-    {
-      "name": "tag-check",
-      "source": {
-        "source": "github",
-        "repo": "leanbiz-ai/skills",
-        "ref": "tag-check-v0.0.1",
-        "sha": "9abaf98184cfaf5d227eda8f54695d6e33df80ea"
-      },
-      "version": "0.0.1",
-      "author": {
-        "name": "BizAI"
-      }
-    }
-  ]
+  "plugins": []
 }
