@@ -4,15 +4,5 @@
     "name": "BizAI",
     "email": "hi@leanbizai.com"
   },
-  "plugins": [
-    {
-      "name": "wire-check",
-      "source": "./plugins/wire-check",
-      "version": "0.0.1",
-      "description": "בדיקת-חיווט זמנית",
-      "author": {
-        "name": "BizAI"
-      }
-    }
-  ]
+  "plugins": []
 }
