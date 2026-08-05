@@ -8,8 +8,8 @@
     {
       "name": "reel-machine",
       "source": "./plugins/reel-machine",
-      "version": "1.0.0",
-      "description": "סרטון מהטלפון הופך לריל עם כתוביות ממותגות ותמונת שער. node ו-ffmpeg בלבד.",
+      "version": "1.0.1",
+      "description": "סרטון גולמי נכנס, ריל עם כתוביות ותמונת-פתיחה יוצא. ffmpeg בלבד, רץ מקומית.",
       "author": {
         "name": "BizAI"
       }
