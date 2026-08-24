@@ -13,6 +13,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "content-week",
+      "source": "./plugins/content-week",
+      "version": "1.0.0",
+      "description": "בונה לעסק שבוע תוכן מוכן לפרסום, מתוך פרופיל של העסק עצמו ולא מתוך ידע כללי על התחום.",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
