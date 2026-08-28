@@ -31,6 +31,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "design-audit",
+      "source": "./plugins/design-audit",
+      "version": "1.0.0",
+      "description": "בודק עמוד נחיתה קיים ומחזיר רשימת תיקונים עם מספרים, במקום דעות על עיצוב.",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
