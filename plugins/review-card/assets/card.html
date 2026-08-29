@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>כרטיס ביקורת</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap" rel="stylesheet">
+<!--
+  כרטיס-ביקורת. קובץ אחד, בלי שרת, בלי התקנה.
+
+  🔴 למה קנבס ולא HTML שמצלמים ממנו מסך:
+  הקובץ הזה הולך לבעל עסק שלא יודע מה זה DevTools, והוא צריך לצאת ממנו עם
+  PNG בגודל 1080x1920 ולא עם צילום מסך של דפדפן. שתי דרכים היו אפשריות:
+    1. לצייר ב-HTML ולהמיר ל-PNG דרך SVG foreignObject.
+    2. לצייר ישר על קנבס.
+  הראשונה נשברת בדיוק אצל מי שאין לו ידע לתקן: פונט חיצוני לא נטען בתוך
+  SVG-as-image, ובספארי foreignObject מתנהג אחרת לגמרי. השנייה מציירת פעם
+  אחת, והתצוגה שרואים היא בדיוק הפיקסלים שיישמרו. **מה שרואים הוא מה שנשמר**,
+  וזו הסיבה היחידה שהיא נבחרה.
+
+  הכל נמצא ב-window.__CARD__ למטה. הסקיל כותב אותו, שאר הקובץ לא משתנה.
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #10131a; min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; gap: 18px; padding: 24px 16px 40px;
+    font-family: 'Heebo', 'Arial Hebrew', system-ui, sans-serif; color: #fff;
+  }
+  #stage { box-shadow: 0 18px 60px rgba(0,0,0,.55); border-radius: 14px; overflow: hidden; }
+  /* הקנבס עצמו הוא 1080x1920. התצוגה מוקטנת בלבד, והשמירה תמיד במלוא הגודל. */
+  canvas { display: block; width: min(380px, 88vw); height: auto; }
+  #bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  button {
+    font-family: inherit; font-size: 19px; font-weight: 700; cursor: pointer;
+    border: 0; border-radius: 999px; padding: 15px 34px; color: #fff;
+    background: #FF6A15; box-shadow: 0 8px 24px rgba(255,106,21,.35);
+  }
+  button:active { transform: translateY(1px); }
+  .sw { width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); cursor: pointer; padding: 0; box-shadow: none; }
+  .sw[aria-pressed="true"] { border-color: #fff; border-width: 4px; }
+  #hint { font-size: 15px; opacity: .62; text-align: center; max-width: 380px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div id="stage"><canvas id="c" width="1080" height="1920"></canvas></div>
+
+<div id="bar">
+  <button id="save">שמירת התמונה</button>
+  <div id="themes"></div>
+</div>
+<p id="hint">התמונה נשמרת בגודל 1080x1920, בדיוק המידה של סטורי.</p>
+
+<script>
+// ── מה שהסקיל ממלא ─────────────────────────────────────────────────────
+window.__CARD__ = {
+  quote: "חיכיתי שלושה חודשים לפני שהתקשרתי, ובסוף הכל נגמר בפגישה אחת. חבל לי על הזמן שחיכיתי.",
+  author: "דנה כ׳",
+  detail: "לקוחה מאז 2024",
+  stars: 5,
+  business: "העסק שלכם",
+  eyebrow: "מה שלקוחות אומרים",
+  theme: "navy",
+  file: "review-card"
+};
+// ───────────────────────────────────────────────────────────────────────
+
+const THEMES = {
+  navy:  { bg: ["#14213D", "#0B1224"], text: "#FFFFFF", accent: "#FF6A15", soft: "rgba(255,255,255,.62)", quoteMark: "rgba(255,255,255,.13)" },
+  cream: { bg: ["#F6EFE4", "#EADFCB"], text: "#1B1B1B", accent: "#C2410C", soft: "rgba(0,0,0,.55)",       quoteMark: "rgba(0,0,0,.09)" },
+  ink:   { bg: ["#101010", "#000000"], text: "#FFFFFF", accent: "#E8B04B", soft: "rgba(255,255,255,.58)", quoteMark: "rgba(255,255,255,.11)" },
+  olive: { bg: ["#22301F", "#131C12"], text: "#F3F0E7", accent: "#D6A756", soft: "rgba(243,240,231,.6)",  quoteMark: "rgba(243,240,231,.12)" }
+};
+
+const W = 1080, H = 1920;
+// 🔴 אזור בטוח לסטורי. הממשק של אינסטגרם יושב על הפינות, וטקסט שנכנס לשם
+// פשוט לא נקרא. כל מה שמצויר נשאר בין 300 ל-1620 בגובה.
+const SAFE_TOP = 300, SAFE_BOTTOM = 1620, PAD = 110;
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
+const font = (w, px) => `${w} ${px}px 'Heebo', 'Arial Hebrew', system-ui, sans-serif`;
+
+// גלישת שורות בעברית. measureText על מילים, ובנייה מימין לשמאל בעזרת
+// ctx.direction = "rtl", שמסדר את השורה עצמה נכון גם כשיש בה מספר או מילה באנגלית.
+function wrap(text, maxW) {
+  const words = String(text).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// הקטנה עד שנכנס: גם ברוחב וגם בגובה. ציטוט ארוך לא נחתך ולא גולש, הוא קטן.
+function fitQuote(text, maxW, maxH, startPx) {
+  for (let px = startPx; px >= 34; px -= 2) {
+    ctx.font = font(900, px);
+    const lines = wrap(text, maxW);
+    const lh = Math.round(px * 1.38);
+    if (lines.length * lh <= maxH) return { px, lines, lh };
+  }
+  ctx.font = font(900, 34);
+  return { px: 34, lines: wrap(text, maxW), lh: 47 };
+}
+
+function draw() {
+  const D = window.__CARD__;
+  const T = THEMES[D.theme] || THEMES.navy;
+
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, T.bg[0]); g.addColorStop(1, T.bg[1]);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  ctx.direction = "rtl";
+  ctx.textAlign = "right";
+  const right = W - PAD, maxW = W - PAD * 2;
+
+  // 🔴 מודדים את כל הבלוק ורק אז מציירים, כדי למרכז אותו לגובה.
+  // בגרסה הראשונה הכל התחיל מלמעלה בגובה קבוע, וציטוט קצר השאיר שליש
+  // כרטיס ריק בתחתית. **אורך הביקורת אינו בשליטתנו**, ולכן הפריסה היא
+  // שמתאימה את עצמה אליו ולא הפוך.
+  const FOOTER_H = D.business ? 120 : 0;
+  const headH = (D.eyebrow ? 54 : 0) + (D.stars > 0 ? 96 : 0);
+  const tailH = 44 + 88 + (D.detail ? 58 : 0);          // קו, שם, ופרט
+  const roomForQuote = (SAFE_BOTTOM - FOOTER_H) - SAFE_TOP - headH - tailH - 120;
+  const q = fitQuote(D.quote, maxW, roomForQuote, 118);
+  const quoteH = q.lines.length * q.lh;
+
+  const blockH = headH + 60 + quoteH + tailH;
+  let y = SAFE_TOP + Math.max(0, ((SAFE_BOTTOM - FOOTER_H) - SAFE_TOP - blockH) / 2);
+
+  // גרש פתיחה גדול ודהוי. סימן ולא קישוט: הוא אומר "זה ציטוט" בלי מילה אחת.
+  ctx.font = font(900, 300);
+  ctx.fillStyle = T.quoteMark;
+  ctx.fillText("”", right + 18, y + 100);
+
+  if (D.eyebrow) {
+    ctx.font = font(700, 40);
+    ctx.fillStyle = T.accent;
+    ctx.fillText(D.eyebrow, right, y + 40);
+    y += 54;
+  }
+
+  if (D.stars > 0) {
+    ctx.font = font(400, 62);
+    ctx.fillStyle = T.accent;
+    ctx.fillText("★".repeat(Math.min(5, D.stars)), right, y + 62);
+    y += 96;
+  }
+
+  y += 60;
+  ctx.fillStyle = T.text;
+  ctx.font = font(900, q.px);
+  let qy = y + q.px;
+  for (const line of q.lines) { ctx.fillText(line, right, qy); qy += q.lh; }
+  y += quoteH;
+
+  // קו קצר בצבע ההדגשה מפריד בין הציטוט למי שאמר אותו.
+  ctx.fillStyle = T.accent;
+  ctx.fillRect(right - 96, y + 40, 96, 7);
+
+  ctx.fillStyle = T.text;
+  ctx.font = font(700, 46);
+  ctx.fillText(D.author || "", right, y + 132);
+
+  if (D.detail) {
+    ctx.fillStyle = T.soft;
+    ctx.font = font(400, 36);
+    ctx.fillText(D.detail, right, y + 190);
+  }
+
+  if (D.business) {
+    ctx.fillStyle = T.soft;
+    ctx.font = font(700, 38);
+    ctx.textAlign = "center";
+    ctx.fillText(D.business, W / 2, SAFE_BOTTOM - 20);
+    ctx.textAlign = "right";
+  }
+}
+
+function render() {
+  // הפונט נטען מהרשת. בלי ההמתנה הזאת הציור הראשון יוצא בפונט ברירת המחדל,
+  // והמדידה של גלישת השורות נעשית על פונט אחר מזה שנראה בסוף.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  else draw();
+  draw();
+}
+
+const themesEl = document.getElementById("themes");
+for (const name of Object.keys(THEMES)) {
+  const b = document.createElement("button");
+  b.className = "sw";
+  b.style.background = THEMES[name].bg[0];
+  b.title = name;
+  b.setAttribute("aria-pressed", String(name === window.__CARD__.theme));
+  b.onclick = () => {
+    window.__CARD__.theme = name;
+    for (const s of themesEl.children) s.setAttribute("aria-pressed", String(s.title === name));
+    draw();
+  };
+  themesEl.appendChild(b);
+}
+
+document.getElementById("save").onclick = () => {
+  const a = document.createElement("a");
+  a.download = (window.__CARD__.file || "review-card") + ".png";
+  a.href = c.toDataURL("image/png");
+  a.click();
+};
+
+render();
+</script>
+</body>
+</html>
