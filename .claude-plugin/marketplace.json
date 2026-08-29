@@ -40,6 +40,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "review-card",
+      "source": "./plugins/review-card",
+      "version": "1.0.0",
+      "description": "הופך ביקורת של לקוח לתמונת סטורי מעוצבת 1080x1920, מוכנה לשיתוף, בלחיצה אחת",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
