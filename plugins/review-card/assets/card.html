@@ -48,6 +48,7 @@
 
 <div id="bar">
   <button id="save">שמירת התמונה</button>
+  <div id="styles"></div>
   <div id="themes"></div>
 </div>
 <p id="hint">התמונה נשמרת בגודל 1080x1920, בדיוק המידה של סטורי.</p>
@@ -62,7 +63,12 @@ window.__CARD__ = {
   business: "העסק שלכם",
   eyebrow: "מה שלקוחות אומרים",
   theme: "navy",
-  file: "review-card"
+  file: "review-card",
+  // "quote" = כרטיס הציטוט. "whatsapp" = שחזור של ההודעה כמו שהיא הגיעה.
+  style: "quote",
+  time: "21:14",          // השעה על הבועה. סתם פרט, ובלעדיו זה לא נראה אמיתי
+  reply: "תודה רבה 🙏",   // התשובה הירוקה שלכם. ריק = בלי תשובה
+  mirror: false           // אם בטלפון שלכם הצדדים הפוכים, שנו ל-true
 };
 // ───────────────────────────────────────────────────────────────────────
 
@@ -109,7 +115,7 @@ function fitQuote(text, maxW, maxH, startPx) {
   return { px: 34, lines: wrap(text, maxW), lh: 47 };
 }
 
-function draw() {
+function drawQuote() {
   const D = window.__CARD__;
   const T = THEMES[D.theme] || THEMES.navy;
 
@@ -184,6 +190,149 @@ function draw() {
   }
 }
 
+// ═══ סגנון 2: שחזור של ההודעה כמו שהיא הגיעה בוואטסאפ ═══════════════════
+//
+// 🔴 למה **שחזור** ולא ניקוי של צילום המסך שלהם, וזו החלטה ולא קיצור דרך:
+// צילום מסך אמיתי נושא איתו את מספר הטלפון, את תמונת הפרופיל, ואת השורה
+// הקודמת בשיחה. **מי שמעלה אותו לסטורי מפרסם דברים שהוא לא שם לב אליהם.**
+// שחזור מציג בדיוק את מה שבחרו להציג, בגודל שנקרא בטלפון, ובלי מה שלא
+// שייך. זה גם מה שהופך את זה לאותנטי יותר ולא פחות: אותה בועה, בלי הרעש.
+const WA = {
+  light: { bg: "#ECE5DD", header: "#075E54", headerText: "#FFFFFF", headerSub: "rgba(255,255,255,.72)",
+           inBubble: "#FFFFFF", inText: "#111B21", outBubble: "#DCF8C6", outText: "#111B21",
+           meta: "#667781", avatar: "#B9C4C9", stamp: "rgba(0,0,0,.45)" },
+  dark:  { bg: "#0B141A", header: "#202C33", headerText: "#E9EDEF", headerSub: "rgba(233,237,239,.6)",
+           inBubble: "#202C33", inText: "#E9EDEF", outBubble: "#005C4B", outText: "#E9EDEF",
+           meta: "#8696A0", avatar: "#3B4A54", stamp: "rgba(255,255,255,.45)" }
+};
+const waTheme = () => WA[(window.__CARD__.theme === "cream" || window.__CARD__.theme === "olive") ? "light" : "dark"];
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// בועה אחת. מחזירה את הגובה שתפסה, כדי שהקוראת תדע איפה מתחילה הבאה.
+function bubble(text, top, opts) {
+  const T = waTheme();
+  const px = opts.px, lh = Math.round(px * 1.42);
+  ctx.font = font(400, px);
+  const maxTextW = 760;
+  const lines = wrap(text, maxTextW);
+  const wide = Math.max(...lines.map((l) => ctx.measureText(l).width));
+  const timeW = 108;                                   // מקום לשעה ולווים
+  const boxW = Math.min(860, Math.max(wide, 260) + 64 + (lines.length === 1 ? timeW : 0));
+  const boxH = lines.length * lh + 62;
+  const x = opts.right ? W - 60 - boxW : 60;
+
+  ctx.fillStyle = opts.out ? T.outBubble : T.inBubble;
+  roundRect(x, top, boxW, boxH, 34);
+  // הזנב הקטן. בלעדיו זה מלבן מעוגל, ואיתו זה וואטסאפ.
+  ctx.beginPath();
+  if (opts.right) { ctx.moveTo(x + boxW - 12, top); ctx.lineTo(x + boxW + 26, top); ctx.lineTo(x + boxW - 12, top + 40); }
+  else { ctx.moveTo(x + 12, top); ctx.lineTo(x - 26, top); ctx.lineTo(x + 12, top + 40); }
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = opts.out ? T.outText : T.inText;
+  ctx.textAlign = "right";
+  let ty = top + 30 + px;
+  for (const l of lines) { ctx.fillText(l, x + boxW - 32, ty); ty += lh; }
+
+  // שעה, ואצל היוצאת גם שני הווים הכחולים.
+  ctx.font = font(400, 26);
+  ctx.fillStyle = T.meta;
+  ctx.textAlign = "left";
+  const metaY = top + boxH - 24;
+  ctx.fillText(window.__CARD__.time || "", x + (opts.out ? 100 : 30), metaY);
+  if (opts.out) {
+    // שני הווים הכחולים. הם רחוקים מהשעה בכוונה, כי בגרסה הראשונה הם
+    // נדרסו עליה והבועה הקצרה נראתה שבורה.
+    ctx.strokeStyle = "#53BDEB"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (const dx of [0, 16]) {
+      ctx.beginPath();
+      ctx.moveTo(x + 28 + dx, metaY - 12); ctx.lineTo(x + 36 + dx, metaY - 4); ctx.lineTo(x + 52 + dx, metaY - 24);
+      ctx.stroke();
+    }
+  }
+  ctx.textAlign = "right";
+  return boxH;
+}
+
+function drawWhats() {
+  const D = window.__CARD__;
+  const T = waTheme();
+
+  ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H);
+  ctx.direction = "rtl";
+  ctx.textAlign = "right";
+
+  // הכותרת. היא מתחילה למעלה כמו במסך אמיתי, אבל **כל מה שחשוב בה יושב
+  // מתחת ל-180**, כי שם נגמר הממשק של הסטורי שמכסה את ראש התמונה.
+  ctx.fillStyle = T.header; ctx.fillRect(0, 0, W, 360);
+  ctx.fillStyle = T.headerSub;
+  ctx.font = font(400, 30);
+  ctx.fillText(D.time || "", W - 60, 108);
+
+  const av = 96, avX = W - 70 - av, avY = 226;
+  ctx.fillStyle = T.avatar;
+  ctx.beginPath(); ctx.arc(avX + av / 2, avY + av / 2, av / 2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = T.header;
+  ctx.font = font(700, 52);
+  ctx.textAlign = "center";
+  ctx.fillText((D.author || "?").trim().charAt(0), avX + av / 2, avY + av / 2 + 19);
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = T.headerText;
+  ctx.font = font(700, 44);
+  ctx.fillText(D.author || "", avX - 28, avY + 44);
+  ctx.fillStyle = T.headerSub;
+  ctx.font = font(400, 30);
+  ctx.fillText(D.detail || "", avX - 28, avY + 90);
+
+  // הבועות ממורכזות לגובה באזור השיחה, כדי שלא יידבקו לכותרת.
+  const inRight = !D.mirror;                 // הנכנסת מימין, היוצאת משמאל
+  const px = D.quote.length > 260 ? 40 : D.quote.length > 150 ? 46 : 52;
+  ctx.font = font(400, px);
+  const lines = wrap(D.quote, 760).length;
+  const inH = lines * Math.round(px * 1.42) + 62;
+  const replyH = D.reply ? 106 : 0;
+  const total = inH + (replyH ? replyH + 28 : 0) + 96;
+  let y = 400 + Math.max(0, (1500 - 400 - total) / 2);
+
+  // גלולת התאריך. פרט קטן שאין בלעדיו, כי בכל מסך וואטסאפ אמיתי הוא שם.
+  ctx.font = font(400, 30);
+  const dayW = ctx.measureText(D.day || "היום").width + 56;
+  ctx.fillStyle = waTheme().inBubble;
+  roundRect((W - dayW) / 2, y, dayW, 62, 31);
+  ctx.fillStyle = waTheme().meta;
+  ctx.textAlign = "center";
+  ctx.fillText(D.day || "היום", W / 2, y + 42);
+  ctx.textAlign = "right";
+  y += 96;
+
+  y += bubble(D.quote, y, { px, right: inRight, out: false });
+  if (D.reply) { y += 28; bubble(D.reply, y, { px: 44, right: !inRight, out: true }); }
+
+  if (D.business) {
+    ctx.fillStyle = T.stamp;
+    ctx.font = font(700, 36);
+    ctx.textAlign = "center";
+    ctx.fillText(D.business, W / 2, SAFE_BOTTOM + 20);
+    ctx.textAlign = "right";
+  }
+}
+
+function draw() {
+  if (window.__CARD__.style === "whatsapp") drawWhats();
+  else drawQuote();
+}
+
 function render() {
   // הפונט נטען מהרשת. בלי ההמתנה הזאת הציור הראשון יוצא בפונט ברירת המחדל,
   // והמדידה של גלישת השורות נעשית על פונט אחר מזה שנראה בסוף.
@@ -191,6 +340,21 @@ function render() {
   else draw();
   draw();
 }
+
+const stylesEl = document.getElementById("styles");
+for (const [key, label] of [["quote", "כרטיס"], ["whatsapp", "וואטסאפ"]]) {
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.style.cssText = "font-size:16px;padding:11px 22px;background:#243040";
+  b.dataset.style = key;
+  b.onclick = () => {
+    window.__CARD__.style = key;
+    for (const s of stylesEl.children) s.style.background = s.dataset.style === key ? "#FF6A15" : "#243040";
+    draw();
+  };
+  stylesEl.appendChild(b);
+}
+for (const s of stylesEl.children) s.style.background = s.dataset.style === (window.__CARD__.style || "quote") ? "#FF6A15" : "#243040";
 
 const themesEl = document.getElementById("themes");
 for (const name of Object.keys(THEMES)) {
