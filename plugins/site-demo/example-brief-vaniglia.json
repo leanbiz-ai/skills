@@ -1,0 +1,154 @@
+{
+  "source": {
+    "url": "https://www.vaniglia.co.il",
+    "host": "vaniglia.co.il",
+    "scrapedAt": "2026-09-18T04:49:47.658Z",
+    "title": "רשת הגלידריות וניליה",
+    "ogTitle": "רשת הגלידריות וניליה",
+    "description": "רשת וניליה הוקמה בשנת 2002 מתוך חזון להביא לראשונה לישראל גלידת פרימיום איכותית וברמה בינלאומית. וניליה דוגלת בשיטות מסורתיות להכנת גלידה באמצעות חומרי הגלם הטובים בעולם, ליקוט תוצרת חקלאית משובחת ושימוש ב100% חומרים טבעיים, ללא צבעי מאכל מלאכותיים וחומרים משמרים.",
+    "headings": [
+      {
+        "tag": "h1",
+        "text": "רשת הגלידריות וניליה"
+      },
+      {
+        "tag": "h2",
+        "text": "רשת הגלידריות וניליה"
+      },
+      {
+        "tag": "h2",
+        "text": "רשת גלידריות וניליה"
+      },
+      {
+        "tag": "h3",
+        "text": "בואו לבקר אותנו בסניפים!"
+      },
+      {
+        "tag": "h3",
+        "text": "חולם על גלידריה משלך?"
+      },
+      {
+        "tag": "h3",
+        "text": "רוצים לעבוד איתנו?"
+      },
+      {
+        "tag": "h4",
+        "text": "אנחנו במדיה"
+      }
+    ],
+    "buttons": [
+      "הצהרת נגישות",
+      "לרכישת התוכנה",
+      "דלג לתוכן",
+      "אודות",
+      "סניפים",
+      "טעמים",
+      "אירועים",
+      "זכיינות",
+      "מועדון וניליה",
+      "דרושים",
+      "צור קשר",
+      "מדיניות פרטיות"
+    ],
+    "googleFonts": [
+      "Assistant"
+    ],
+    "palette": {
+      "all": [
+        "#0E0E0E",
+        "#352721",
+        "#625047",
+        "#837166",
+        "#A18A7A",
+        "#B7ACA2",
+        "#DEC1B5",
+        "#E99086",
+        "#F3E6DD",
+        "#FBEFEB",
+        "#FFFFFF"
+      ],
+      "ink": "#0E0E0E",
+      "light": "#F3E6DD",
+      "accent": "#E99086"
+    },
+    "logoFile": "assets/logo.png",
+    "photos": [
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia-Day2-033-scaled-2.jpg",
+        "file": "assets/photos/Vaniglia-Day2-033-scaled-2.jpg",
+        "w": 1707,
+        "h": 2560
+      },
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia_036.jpg",
+        "file": "assets/photos/Vaniglia_036.jpg",
+        "w": 1423,
+        "h": 2134
+      },
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia_new_-40-3-scaled-2.jpg",
+        "file": "assets/photos/Vaniglia_new_-40-3-scaled-2.jpg",
+        "w": 2560,
+        "h": 2560
+      },
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia-003-scaled-1.jpg",
+        "file": "assets/photos/Vaniglia-003-scaled-1.jpg",
+        "w": 1707,
+        "h": 2560
+      },
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia-005-scaled-1.jpg",
+        "file": "assets/photos/Vaniglia-005-scaled-1.jpg",
+        "w": 1707,
+        "h": 2560
+      },
+      {
+        "url": "https://www.vaniglia.co.il/wp-content/uploads/2021/07/Vaniglia-006-scaled-2.jpg",
+        "file": "assets/photos/Vaniglia-006-scaled-2.jpg",
+        "w": 1707,
+        "h": 2560
+      }
+    ],
+    "capture": {
+      "mobile": "assets/site-mobile.png",
+      "mobileHeight": 6409,
+      "mobileWidth": 860,
+      "desktop": "assets/site-desktop.png"
+    }
+  },
+  "copy": {
+    "brand": "רשת הגלידריות וניליה",
+    "kicker": "רשת גלידריות",
+    "headline1": "רשת הגלידריות<br />וניליה",
+    "kicker2": "מאז 2002",
+    "headline2": "גלידת פרימיום,<br />בשיטות מסורתיות",
+    "sub2": "חומרי הגלם הטובים בעולם, וליקוט תוצרת חקלאית משובחת.",
+    "tagline": "100% חומרים טבעיים, <b>ללא חומרים משמרים</b>.",
+    "kicker3": "וניליה",
+    "headline3": "חומרים טבעיים",
+    "rows": [
+      {
+        "title": "100% חומרים טבעיים",
+        "body": "ליקוט תוצרת חקלאית משובחת."
+      },
+      {
+        "title": "ללא צבעי מאכל מלאכותיים",
+        "body": "חומרי הגלם הטובים בעולם."
+      },
+      {
+        "title": "ללא חומרים משמרים",
+        "body": "שיטות מסורתיות להכנת גלידה."
+      }
+    ],
+    "ctaHeadline": "בואו לבקר אותנו<br />בסניפים!",
+    "ctaButton": "סניפים"
+  },
+  "design": {
+    "ink": "#0E0E0E",
+    "accent": "#E99086",
+    "light": "#F3E6DD",
+    "font": "Assistant",
+    "heroPhoto": "assets/photos/Vaniglia-005-scaled-1.jpg"
+  }
+}
