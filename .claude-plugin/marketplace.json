@@ -58,6 +58,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "quote-pdf",
+      "source": "./plugins/quote-pdf",
+      "version": "1.0.0",
+      "description": "הופך דיבור חופשי אחרי שיחה עם לקוח להצעת מחיר PDF ממותגת והודעת וואטסאפ מוכנה.",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
