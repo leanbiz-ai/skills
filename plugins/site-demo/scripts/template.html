@@ -1,0 +1,251 @@
+<!doctype html>
+<!-- site-demo · תבנית. הערכים ב-{{ }} מוזרקים על ידי build.mjs מתוך brief.json.
+     🔴 אל תערוך את הקובץ הזה כדי לשנות לקוח אחד. ערוך את brief.json. -->
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <style id="client-fonts">{{FONT_CSS}}</style>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: {{DARK}}; }
+      #root {
+        width: 1080px; height: 1920px; position: relative; overflow: hidden;
+        direction: rtl;
+        font-family: {{FONT_STACK}};
+        -webkit-font-smoothing: antialiased;
+      }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .head { font-weight: 800; letter-spacing: -0.02em; }
+      .mono { font-weight: 700; letter-spacing: 0.14em; }
+
+      #s1 { background: {{DARK}}; z-index: 1; }
+      #s1 .glow {
+        position: absolute; width: 1500px; height: 1500px; left: -210px; top: -420px;
+        background: radial-gradient(circle, {{ACCENT_RGBA}} 0%, rgba(0,0,0,0) 62%);
+      }
+      #s1 .urlbar {
+        position: absolute; top: 132px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 18px; direction: ltr;
+        padding: 20px 40px; border-radius: 999px;
+        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+        color: #ffffff; font-weight: 700; font-size: 34px;
+      }
+      #s1 .dot { width: 16px; height: 16px; border-radius: 50%; background: {{ACCENT}}; }
+      #s1 .phone {
+        position: absolute; left: 50%; top: 300px; margin-left: -282px;
+        width: 564px; height: 1170px; border-radius: 56px; padding: 12px;
+        background: linear-gradient(160deg, {{DARK_HI}} 0%, {{DARK_LO}} 100%);
+        box-shadow: 0 60px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      }
+      #s1 .screen {
+        width: 540px; height: 1146px; border-radius: 46px; overflow: hidden;
+        background: {{LIGHT}}; position: relative;
+      }
+      #s1 .screen img { width: 540px; display: block; }
+      #s1 .notch {
+        position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+        width: 150px; height: 26px; border-radius: 999px; background: {{DARK_LO}};
+      }
+      #s1 .kick { position: absolute; top: 1560px; right: 88px; color: {{ACCENT_DARKBG}}; font-size: 28px; }
+      #s1 .h1 {
+        position: absolute; top: 1616px; right: 88px; left: 88px;
+        color: #ffffff; font-size: {{H1_SIZE}}px; line-height: 1.1; text-align: right;
+      }
+
+      #s2 { background: {{LIGHT}}; z-index: 2; }
+      /* מסגרת קבועה עם object-fit, כי תמונת הלקוח יכולה להיות לרוחב או לגובה */
+      #s2 .por { position: absolute; left: -40px; bottom: -40px; width: 1000px; height: 920px; }
+      #s2 .por img { width: 100%; height: 100%; object-fit: cover; border-radius: 28px; display: block; }
+      #s2 .veil {
+        position: absolute; inset: 0;
+        background: linear-gradient(180deg, {{LIGHT}} 42%, {{LIGHT_A60}} 60%, {{LIGHT_A0}} 82%);
+      }
+      #s2 .rule {
+        position: absolute; top: 268px; right: 88px; width: 460px; height: 3px; background: {{INK}};
+        transform-origin: right center;
+      }
+      #s2 .kick { position: absolute; top: 210px; right: 88px; color: {{MUTED}}; font-size: 26px; }
+      #s2 .h1 {
+        position: absolute; top: 330px; right: 88px; left: 88px; text-align: right;
+        color: {{INK}}; font-size: {{H2_SIZE}}px; line-height: 1.08;
+      }
+      #s2 .h1 .o { color: {{ACCENT_LIGHTBG}}; }
+      #s2 .sub {
+        position: absolute; top: 640px; right: 88px; width: 800px; text-align: right;
+        color: {{MUTED_DARK}}; font-size: 38px; line-height: 1.45;
+      }
+      #s2 .tagbox {
+        position: absolute; top: 900px; right: 88px; left: 88px;
+        background: {{INK}}; color: #ffffff; padding: 22px 40px; border-radius: 16px;
+        font-size: 34px;
+      }
+      #s2 .tagbox b { color: {{ACCENT_DARKBG}}; }
+
+      #s3 { background: {{LIGHT}}; z-index: 3; }
+      #s3 .kick { position: absolute; top: 280px; right: 88px; color: {{MUTED}}; font-size: 26px; }
+      #s3 .h2 {
+        position: absolute; top: 340px; right: 88px; left: 88px; text-align: right;
+        color: {{INK}}; font-size: 74px; line-height: 1.1;
+      }
+      #s3 .rows { position: absolute; top: 620px; right: 88px; left: 88px; }
+      #s3 .row { border-top: 3px solid {{INK}}; padding: 56px 0 52px; text-align: right; }
+      #s3 .num {
+        color: {{ACCENT_LIGHTBG}}; font-weight: 800; font-size: 78px;
+        line-height: 1; letter-spacing: -0.03em; direction: ltr; text-align: right;
+      }
+      #s3 .rt { color: {{INK}}; font-size: 46px; margin-top: 12px; font-weight: 700; }
+      #s3 .rb { color: {{MUTED_DARK}}; font-size: 34px; margin-top: 10px; line-height: 1.4; }
+
+      #s4 { background: {{ACCENT}}; z-index: 4; }
+      #s4 .glow {
+        position: absolute; width: 1400px; height: 1400px; left: -160px; bottom: -540px;
+        background: radial-gradient(circle, {{LIGHT_A55}} 0%, {{LIGHT_A0}} 62%);
+      }
+      #s4 .logo { position: absolute; top: 330px; right: 88px; width: 300px; }
+      #s4 .logo img { width: 300px; display: block; }
+      #s4 .wordmark {
+        position: absolute; top: 340px; right: 88px; color: {{ON_ACCENT}};
+        font-weight: 800; font-size: 56px; letter-spacing: -0.02em;
+      }
+      #s4 .h1 {
+        position: absolute; top: 700px; right: 88px; left: 88px; text-align: right;
+        color: {{ON_ACCENT}}; font-size: {{H4_SIZE}}px; line-height: 1.08;
+      }
+      #s4 .btn {
+        position: absolute; top: 1150px; right: 88px;
+        background: {{ON_ACCENT}}; color: {{ACCENT}}; border-radius: 999px;
+        padding: 34px 66px; font-weight: 800; font-size: 44px;
+      }
+      #s4 .url {
+        position: absolute; top: 1360px; right: 88px; direction: rtl; text-align: right;
+        color: {{ON_ACCENT}}; font-weight: 700; font-size: 44px;
+      }
+      #s4 .foot { position: absolute; top: 1452px; right: 88px; color: {{ON_ACCENT_SOFT}}; font-size: 28px; }
+
+      .grain {
+        position: absolute; inset: 0; pointer-events: none; opacity: 0.12; z-index: 9;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.5'/></svg>");
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="14"
+         data-width="1080" data-height="1920">
+      <section id="s1" class="clip" data-start="0" data-duration="4.1" data-track-index="0">
+        <div class="glow"></div>
+        <div class="urlbar"><span class="dot"></span><span>{{HOST}}</span></div>
+        <div class="phone">
+          <div class="screen"><img id="s1shot" src="assets/site-mobile.png" alt="" /></div>
+          <div class="notch"></div>
+        </div>
+        <div class="kick mono">{{KICKER}}</div>
+        <div class="h1 head">{{HEADLINE1}}</div>
+      </section>
+
+      <section id="s2" class="clip" data-start="3.9" data-duration="3.8" data-track-index="1">
+        <div class="por"><img src="{{HERO_PHOTO}}" alt="" /></div>
+        <div class="veil"></div>
+        <div class="kick mono">{{KICKER2}}</div>
+        <div class="rule"></div>
+        <div class="h1 head">{{HEADLINE2}}<span class="o">.</span></div>
+        <div class="sub">{{SUB2}}</div>
+        <div class="tagbox">{{TAGLINE}}</div>
+      </section>
+
+      <section id="s3" class="clip" data-start="7.5" data-duration="3.7" data-track-index="2">
+        <div class="kick mono">{{KICKER3}}</div>
+        <div class="h2 head">{{HEADLINE3}}</div>
+        <div class="rows">
+          <div class="row">
+            <div class="num">01</div>
+            <div class="rt">{{ROW1_TITLE}}</div>
+            <div class="rb">{{ROW1_BODY}}</div>
+          </div>
+          <div class="row">
+            <div class="num">02</div>
+            <div class="rt">{{ROW2_TITLE}}</div>
+            <div class="rb">{{ROW2_BODY}}</div>
+          </div>
+          <div class="row">
+            <div class="num">03</div>
+            <div class="rt">{{ROW3_TITLE}}</div>
+            <div class="rb">{{ROW3_BODY}}</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="s4" class="clip" data-start="11.0" data-duration="3.0" data-track-index="3">
+        <div class="glow"></div>
+        {{LOGO_BLOCK}}
+        <div class="h1 head">{{CTA_HEADLINE}}</div>
+        <div class="btn">{{CTA_BUTTON}}</div>
+        <div class="url">{{HOST}}</div>
+        <div class="foot">{{BRAND}}</div>
+      </section>
+
+      <div class="grain"></div>
+    </div>
+
+    <script>
+      const OUT = { opacity: 0, duration: 0.32, ease: "power2.in" };
+
+      const t1 = gsap.timeline();
+      t1.fromTo("#s1 .phone", { y: 90, scale: 0.94, opacity: 0 },
+                { y: 0, scale: 1, opacity: 1, duration: 1.0, ease: "power3.out" }, 0.05)
+        .fromTo("#s1 .urlbar", { y: -30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, 0.25)
+        .to("#s1shot", { y: {{SCROLL_Y}}, duration: 3.1, ease: "power1.inOut" }, 0.85)
+        .fromTo("#s1 .kick", { x: -26, opacity: 0 },
+                { x: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 1.15)
+        .fromTo("#s1 .h1", { y: 40, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, 1.3)
+        .to("#s1", OUT, 3.7);
+
+      const t2 = gsap.timeline();
+      t2.fromTo("#s2", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0)
+        .fromTo("#s2 .por", { scale: 1.1, y: 40 },
+                { scale: 1, y: 0, duration: 3.6, ease: "power1.out" }, 0)
+        .fromTo("#s2 .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.out" }, 0.2)
+        .fromTo("#s2 .kick", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.25)
+        .fromTo("#s2 .h1", { y: 46, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.85, ease: "power3.out" }, 0.35)
+        .fromTo("#s2 .sub", { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.7, ease: "power2.out" }, 0.75)
+        .fromTo("#s2 .tagbox", { y: 34, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, 1.25)
+        .to("#s2", OUT, 3.4);
+
+      const t3 = gsap.timeline();
+      t3.fromTo("#s3", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0)
+        .fromTo("#s3 .kick", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.1)
+        .fromTo("#s3 .h2", { y: 34, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.15)
+        .fromTo("#s3 .row", { y: 56, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.7, ease: "power3.out", stagger: 0.32 }, 0.5)
+        .fromTo("#s3 .num", { scale: 0.7, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.55, ease: "back.out(2)", stagger: 0.32 }, 0.62)
+        .to("#s3", OUT, 3.35);
+
+      const t4 = gsap.timeline();
+      t4.fromTo("#s4", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 0)
+        .fromTo("#s4 .logo, #s4 .wordmark", { y: -22, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 0.1)
+        .fromTo("#s4 .h1", { y: 44, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, 0.25)
+        .fromTo("#s4 .btn", { scale: 0.86, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" }, 0.85)
+        .fromTo("#s4 .url", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.15)
+        .fromTo("#s4 .foot", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.3)
+        .to("#s4 .glow", { scale: 1.12, duration: 2.6, ease: "power1.out" }, 0.4);
+
+      const tl = gsap.timeline({ paused: true });
+      tl.add(t1, 0).add(t2, 3.9).add(t3, 7.5).add(t4, 11.0);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
