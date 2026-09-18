@@ -49,6 +49,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "site-demo",
+      "source": "./plugins/site-demo",
+      "version": "1.0.0",
+      "description": "הופך אתר של עסק לסרטון אנכי של 14 שניות לאינסטגרם, מתוך האתר עצמו. הצבעים, הגופן, הלוגו, התמונות והטקסט נלקחים כולם מהאתר.",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
