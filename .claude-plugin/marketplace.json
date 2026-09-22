@@ -67,6 +67,15 @@
       "author": {
         "name": "BizAI"
       }
+    },
+    {
+      "name": "clip-machine",
+      "source": "./plugins/clip-machine",
+      "version": "1.0.0",
+      "description": "הופך הקלטה ארוכה לחמישה קטעים אנכיים עם כתוביות בעברית, מוכנים לאינסטגרם.",
+      "author": {
+        "name": "BizAI"
+      }
     }
   ]
 }
